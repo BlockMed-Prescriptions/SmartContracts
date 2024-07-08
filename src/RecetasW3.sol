@@ -52,7 +52,7 @@ contract RecetasW3 {
         
         receta.DIDfarmacia = _DIDfarmacia;
         receta.lote = _lote; // Completar el campo lote
-        receta.dispensada = true;
+        receta.dispensada = true; // Dispenso la receta
 
         emit RecetaDispensada(_hash, _DIDfarmacia, _lote);
     }

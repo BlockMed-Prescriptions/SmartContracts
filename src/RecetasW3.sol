@@ -5,6 +5,7 @@ contract RecetasW3 {
     struct Medicamento {
         string codigo;
         uint cantidad;
+        string lote; // Nuevo campo para el lote
     }
 
     struct Receta {
@@ -12,7 +13,6 @@ contract RecetasW3 {
         bool dispensada;
         string DIDfarmacia;
         Medicamento[] medicamentos;
-        string lote; // Nuevo campo para el lote
         uint256 bloque; // Nuevo campo para el bloque de la transacción
     }
 
@@ -22,8 +22,7 @@ contract RecetasW3 {
     event RecetaDispensada(string hash, string DIDfarmacia, string lote);
 
     function emitirReceta(
-        string memory _hash,
-        Medicamento[] memory _medicamentos
+        string memory _hash
     ) public {
         require(bytes(_hash).length != 0, unicode"El hash no puede estar vacío.");
         require(bytes(recetas[_hash].hash).length == 0, unicode"La receta ya ha sido emitida.");
@@ -32,29 +31,28 @@ contract RecetasW3 {
         receta.hash = _hash;
         receta.dispensada = false;
         receta.DIDfarmacia = "";
-        receta.lote = ""; // Inicialmente vacío
         receta.bloque = block.number; // Guardar el bloque de la transacción
-
-        for (uint i = 0; i < _medicamentos.length; i++) {
-            receta.medicamentos.push(Medicamento({
-                codigo: _medicamentos[i].codigo,
-                cantidad: _medicamentos[i].cantidad
-            }));
-        }
 
         emit RecetaEmitida(_hash);
     }
 
-    function dispensarMedicamento(string memory _hash, string memory _DIDfarmacia, string memory _lote) public {
+    function dispensarMedicamento(string memory _hash, string memory _DIDfarmacia, Medicamento[] memory _medicamentos) public {
         Receta storage receta = recetas[_hash];
         require(bytes(recetas[_hash].hash).length != 0, unicode"La receta no existe.");
         require(!receta.dispensada, unicode"La receta ya fue dispensada.");
         
         receta.DIDfarmacia = _DIDfarmacia;
-        receta.lote = _lote; // Completar el campo lote
-        receta.dispensada = true; // Dispenso la receta
+        receta.dispensada = true;
 
-        emit RecetaDispensada(_hash, _DIDfarmacia, _lote);
+        for (uint i = 0; i < _medicamentos.length; i++) {
+            receta.medicamentos.push(Medicamento({
+                codigo: _medicamentos[i].codigo,
+                cantidad: _medicamentos[i].cantidad,
+                lote: _medicamentos[i].lote // Añadir el lote aquí
+            }));
+        }
+
+        emit RecetaDispensada(_hash, _DIDfarmacia, _medicamentos[0].lote); // Emitir evento con el lote del primer medicamento
     }
 
     function verificarReceta(string memory _hash) public view returns (Receta memory) {
